@@ -12,27 +12,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1️⃣ Checkout repo (needed for azure/webapps-deploy action)
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      # 1️⃣ Checkout repo (needed for azure/webapps-deploy action)
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    # 2️⃣ Download artifact from CI workflow
-    - name: Download CI artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: python-app-artifact   # must match artifact uploaded in CI
-        path: python-app-artifact   # local folder to extract artifact into
+      # 2️⃣ Download artifact from CI workflow using GitHub API
+      - name: Download artifact from CI run
+        run: |
+          ARTIFACT_NAME=python-app-artifact
+          RUN_ID=${{ github.event.inputs.run_id }}
+          echo "Downloading artifact $ARTIFACT_NAME from CI run $RUN_ID"
+          
+          # Fetch the artifact download URL
+          DOWNLOAD_URL=$(gh api \
+            repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts \
+            -q ".artifacts[] | select(.name==\"$ARTIFACT_NAME\") | .archive_download_url")
 
-    # 3️⃣ Login to Azure
-    - name: Login to Azure
-      uses: azure/login@v1
-      with:
-        creds: ${{ secrets.AZURE_CREDENTIALS }}
+          if [ -z "$DOWNLOAD_URL" ]; then
+            echo "Artifact not found!"
+            exit 1
+          fi
 
-    # 4️⃣ Deploy to Azure Web App
-    - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v2
-      with:
-        app-name: TaskManagerDemo   # your App Service name
-        slot-name: 'production'
-        package: './python-app-artifact'
+          # Download and unzip artifact
+          curl -L -o artifact.zip "$DOWNLOAD_URL"
+          unzip artifact.zip -d python-app-artifact
+
+      # 3️⃣ Login to Azure
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # 4️⃣ Deploy to Azure Web App
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: TaskManagerDemo
+          slot-name: 'production'
+          package: './python-app-artifact'
