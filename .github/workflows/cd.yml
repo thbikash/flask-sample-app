@@ -1,0 +1,39 @@
+name: CD Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: 'CI Run ID to deploy'
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+    # 1️⃣ Checkout repo
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    # 2️⃣ Download artifact from CI workflow
+    - name: Download CI artifact
+      uses: actions/download-artifact@v3
+      with:
+        workflow: ci.yml
+        run-id: ${{ github.event.inputs.run_id }}
+        name: python-app-artifact
+
+    # 3️⃣ Login to Azure
+    - name: 'Login to Azure'
+      uses: azure/login@v1
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    # 4️⃣ Deploy to Azure Web App
+    - name: 'Deploy to Azure Web App'
+      uses: azure/webapps-deploy@v2
+      with:
+        app-name: TaskManagerDemo
+        slot-name: 'production'
+        package: './python-app-artifact'
