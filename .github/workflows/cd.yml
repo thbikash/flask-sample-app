@@ -12,42 +12,16 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    # 1️⃣ Checkout repo (needed for azure/webapps-deploy action)
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # 1️⃣ Get artifact info from CI workflow run
-    - name: Get CI artifact name
-      id: get_artifact
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const run_id = parseInt('${{ github.event.inputs.run_id }}');
-          const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
-            owner: context.repo.owner,
-            repo: context.repo.repo,
-            run_id: run_id
-          });
-
-          if (artifacts.data.artifacts.length === 0) {
-            core.setFailed("No artifacts found for this CI run!");
-          }
-
-          // find our artifact by name
-          const artifact = artifacts.data.artifacts.find(a => a.name === "python-app-artifact");
-          if (!artifact) core.setFailed("Artifact 'python-app-artifact' not found in this run");
-
-          core.setOutput("artifact_id", artifact.id);
-
-    # 2️⃣ Download artifact ZIP using artifact ID
+    # 2️⃣ Download artifact from CI workflow
     - name: Download CI artifact
-      run: |
-        ARTIFACT_ID=${{ steps.get_artifact.outputs.artifact_id }}
-        echo "Downloading artifact ID: $ARTIFACT_ID"
-        curl -L -H "Accept: application/vnd.github+json" \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          https://api.github.com/repos/${{ github.repository }}/actions/artifacts/$ARTIFACT_ID/zip \
-          -o artifact.zip
-        unzip artifact.zip -d python-app-artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: python-app-artifact   # must match artifact uploaded in CI
+        path: python-app-artifact   # local folder to extract artifact into
 
     # 3️⃣ Login to Azure
     - name: Login to Azure
@@ -59,6 +33,6 @@ jobs:
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v2
       with:
-        app-name: TaskManagerDemo
+        app-name: TaskManagerDemo   # your App Service name
         slot-name: 'production'
         package: './python-app-artifact'
