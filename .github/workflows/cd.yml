@@ -10,19 +10,42 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    steps:
 
-    # 1️⃣ Checkout repo
+    steps:
+    # 1️⃣ Checkout repo (needed for azure/webapps-deploy action)
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    # 2️⃣ Download artifact from CI workflow
+    # 2️⃣ Download artifact from a previous CI run
     - name: Download CI artifact
-      uses: actions/download-artifact@v3
+      uses: actions/github-script@v6
+      id: download_artifact
       with:
-        workflow: ci.yml
-        run-id: ${{ github.event.inputs.run_id }}
-        name: python-app-artifact
+        script: |
+          const run_id = parseInt('${{ github.event.inputs.run_id }}');
+          const artifacts = await github.rest.actions.listWorkflowRunArtifacts({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            run_id: run_id
+          });
+
+          if (artifacts.data.artifacts.length === 0) {
+            core.setFailed("No artifacts found for this CI run!");
+          }
+
+          const artifact = artifacts.data.artifacts[0]; // assuming 1 artifact
+          console.log(`Artifact name: ${artifact.name}`);
+          core.setOutput("artifact_name", artifact.name);
+
+    - name: Download artifact content
+      run: |
+        ARTIFACT_NAME=${{ steps.download_artifact.outputs.artifact_name }}
+        echo "Downloading artifact: $ARTIFACT_NAME"
+        gh api \
+          repos/${{ github.repository }}/actions/artifacts/${{ steps.download_artifact.outputs.artifact_name }}/zip \
+          -H "Accept: application/vnd.github+json" \
+          -o artifact.zip
+        unzip artifact.zip -d python-app-artifact
 
     # 3️⃣ Login to Azure
     - name: 'Login to Azure'
@@ -34,6 +57,6 @@ jobs:
     - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v2
       with:
-        app-name: TaskManagerDemo
+        app-name: TaskManagerDemo   # replace with your App Service name
         slot-name: 'production'
         package: './python-app-artifact'
