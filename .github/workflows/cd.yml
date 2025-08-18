@@ -7,12 +7,16 @@ on:
         description: 'CI Run ID to deploy'
         required: true
 
+permissions:
+  id-token: write   # required for OIDC
+  contents: read    # required for actions/checkout and GH API
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repo (needed for azure/webapps-deploy)
+      # 1️⃣ Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v3
 
@@ -25,7 +29,6 @@ jobs:
           RUN_ID=${{ github.event.inputs.run_id }}
           echo "Downloading artifact $ARTIFACT_NAME from CI run $RUN_ID"
 
-          # Get artifact download URL
           DOWNLOAD_URL=$(gh api \
             -H "Accept: application/vnd.github+json" \
             repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts \
@@ -37,18 +40,11 @@ jobs:
           fi
 
           echo "✅ Artifact URL: $DOWNLOAD_URL"
-
-          # Download and unzip artifact
           curl -L -H "Authorization: token $GH_TOKEN" -o artifact.zip "$DOWNLOAD_URL"
           unzip -o artifact.zip -d python-app-artifact
 
-      # # 3️⃣ Login to Azure
-      # - name: Login to Azure
-      #   uses: azure/login@v1
-      #   with:
-      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Azure Login (using OIDC)
+      # 3️⃣ Login to Azure with OIDC
+      - name: Azure Login (OIDC)
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
@@ -59,6 +55,8 @@ jobs:
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: TaskManagerDemo   # replace with your App Service name
+          app-name: TaskManagerDemo   # your App Service name
           slot-name: 'production'
           package: './python-app-artifact'
+
+          
