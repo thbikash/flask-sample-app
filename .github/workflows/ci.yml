@@ -28,7 +28,8 @@ jobs:
       - name: Package app
         run: |
           mkdir -p dist
-          cp -r * dist/
+          rsync -av --progress . dist --exclude dist --exclude .git --exclude .github
+
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
