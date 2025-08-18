@@ -21,7 +21,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: python-app-artifact   # must match artifact uploaded in CI
-        path: python-app-artifact   # local folder to extract artifact into
+        path: python-app-${{ github.event.inputs.run_id }} # local folder to extract artifact into
 
     # 3️⃣ Login to Azure
     - name: Login to Azure
