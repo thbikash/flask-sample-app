@@ -31,7 +31,4 @@ jobs:
           cp -r * dist/
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: python-app-artifact
-          path: ./dist
+        uses
