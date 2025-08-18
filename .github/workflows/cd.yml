@@ -16,17 +16,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Download artifact from CI workflow using GitHub API
       - name: Download artifact from CI run
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ARTIFACT_NAME=python-app-artifact
           RUN_ID=${{ github.event.inputs.run_id }}
           echo "Downloading artifact $ARTIFACT_NAME from CI run $RUN_ID"
-          
+
           # Fetch the artifact download URL
           DOWNLOAD_URL=$(gh api \
-            repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts \
-            -q ".artifacts[] | select(.name==\"$ARTIFACT_NAME\") | .archive_download_url")
+          repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts \
+          -q ".artifacts[] | select(.name==\"$ARTIFACT_NAME\") | .archive_download_url")
 
           if [ -z "$DOWNLOAD_URL" ]; then
             echo "Artifact not found!"
@@ -36,12 +37,15 @@ jobs:
           # Download and unzip artifact
           curl -L -o artifact.zip "$DOWNLOAD_URL"
           unzip artifact.zip -d python-app-artifact
+      
 
-      # 3️⃣ Login to Azure
-      - name: Login to Azure
+
+      - name: Azure Login (using OIDC)
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       # 4️⃣ Deploy to Azure Web App
       - name: Deploy to Azure Web App
