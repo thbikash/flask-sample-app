@@ -42,11 +42,18 @@ jobs:
           curl -L -H "Authorization: token $GH_TOKEN" -o artifact.zip "$DOWNLOAD_URL"
           unzip -o artifact.zip -d python-app-artifact
 
-      # 3️⃣ Login to Azure
-      - name: Login to Azure
+      # # 3️⃣ Login to Azure
+      # - name: Login to Azure
+      #   uses: azure/login@v1
+      #   with:
+      #     creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Azure Login (using OIDC)
         uses: azure/login@v1
         with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       # 4️⃣ Deploy to Azure Web App
       - name: Deploy to Azure Web App
