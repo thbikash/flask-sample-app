@@ -13,12 +13,25 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
+
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
+
       - name: Run Tests
         run: echo "No tests yet for Flask app"
+
+      - name: Package app
+        run: |
+          mkdir -p dist
+          cp -r * dist/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: python-app-artifact
+          path: ./dist
