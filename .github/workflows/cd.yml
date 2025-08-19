@@ -6,21 +6,27 @@ on:
       run_id:
         description: 'CI Run ID to deploy'
         required: true
+        type: string
+      # NEW: Add an input for the deployment target
+      target:
+        description: 'Deployment target (e.g., azure, vm)'
+        required: true
+        type: string
 
 permissions:
   id-token: write   # required for OIDC
   contents: read    # required for actions/checkout and GH API
 
 jobs:
-  deploy:
+  # JOB 1: Deploy to Azure App Service
+  deploy-to-azure:
+    # NEW: This job only runs if the target input is 'azure'
+    if: github.event.inputs.target == 'azure'
     runs-on: ubuntu-latest
-
     steps:
-      # 1️⃣ Checkout repo
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Download artifact from CI workflow
       - name: Download artifact from CI run
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -43,7 +49,6 @@ jobs:
           curl -L -H "Authorization: token $GH_TOKEN" -o artifact.zip "$DOWNLOAD_URL"
           unzip -o artifact.zip -d python-app-artifact
 
-      # 3️⃣ Login to Azure with OIDC
       - name: Azure Login (OIDC)
         uses: azure/login@v1
         with:
@@ -51,7 +56,6 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      # 4️⃣ Deploy to Azure Web App
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
@@ -59,4 +63,30 @@ jobs:
           slot-name: 'production'
           package: './python-app-artifact'
 
-          
+  # JOB 2: Deploy to a Virtual Machine
+  deploy-to-vm:
+    # NEW: This job only runs if the target input is 'vm'
+    if: github.event.inputs.target == 'vm'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Download artifact (same as above)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # This script is identical to the one in the Azure job
+          # In a real-world scenario, you might make this a reusable workflow
+          ARTIFACT_NAME=python-app-artifact
+          RUN_ID=${{ github.event.inputs.run_id }}
+          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts -q ".artifacts[] | select(.name==\"$ARTIFACT_NAME\") | .archive_download_url")
+          curl -L -H "Authorization: token $GH_TOKEN" -o artifact.zip "$DOWNLOAD_URL"
+          unzip -o artifact.zip -d python-app-artifact
+      
+      # Placeholder for actual VM deployment steps
+      - name: Deploy to VM
+        run: |
+          echo "Deployment to VM would happen here."
+          echo "You would typically use SSH, SCP, or Ansible."
+          ls -la python-app-artifact
