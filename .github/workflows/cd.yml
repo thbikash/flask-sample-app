@@ -64,19 +64,6 @@ jobs:
           package: './python-app-artifact'
 
 # JOB 2: Deploy to a Docker
-  # deploy-to-docker1:  
-  #         if: github.event.inputs.target == 'docker_python'
-  #         runs-on: self-hosted
-  #         steps:
-  #           - name: Docker Deployment
-  #             run: |
-  #               echo "Deploying docker-image flask app on the locall hosted docker..."
-  #               docker pull ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}
-  #               docker stop cbe23ff9e390 || true
-  #               docker rm cbe23ff9e390 || true
-  #               docker run -d --name cbe23ff9e390 -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}
-
-
   deploy-to-docker:  
     if: github.event.inputs.target == 'docker_python'
     runs-on: self-hosted # This is correct, it runs on your local machine
@@ -84,7 +71,8 @@ jobs:
       - name: Docker Deployment
         run: |
           # Define a consistent name for your container
-          CONTAINER_NAME="flask-sample-app"
+          #CONTAINER_NAME="flask-sample-app"
+          CONTAINER_NAME="${{ github.repository_owner }}-${{ github.event.repository.name }}"
 
           echo "Deploying Docker image to local container: $CONTAINER_NAME"
 
