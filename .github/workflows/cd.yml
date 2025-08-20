@@ -82,9 +82,9 @@ jobs:
               run: |
                 echo "Deploying docker-image flask app on the locall hosted docker..."
                 docker pull ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}
-                docker stop app || true
-                docker rm app || true
-                docker run -d --name app -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}
+                docker stop cbe23ff9e390 || true
+                docker rm cbe23ff9e390 || true
+                docker run -d --name cbe23ff9e390 -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Checkout repository
