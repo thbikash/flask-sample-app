@@ -63,30 +63,41 @@ jobs:
           slot-name: 'production'
           package: './python-app-artifact'
 
-  # JOB 2: Deploy to a Virtual Machine
-  deploy-to-vm:
-    # NEW: This job only runs if the target input is 'vm'
-    if: github.event.inputs.target == 'vm'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+  # JOB 2: Deploy to a Docker
+  # deploy-to-docker-python:
+  #   # NEW: This job only runs if the target input is 'vm'
+  #   if: github.event.inputs.target == 'docker_python'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v3
 
-      - name: Download artifact (same as above)
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # This script is identical to the one in the Azure job
-          # In a real-world scenario, you might make this a reusable workflow
-          ARTIFACT_NAME=python-app-artifact
-          RUN_ID=${{ github.event.inputs.run_id }}
-          DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts -q ".artifacts[] | select(.name==\"$ARTIFACT_NAME\") | .archive_download_url")
-          curl -L -H "Authorization: token $GH_TOKEN" -o artifact.zip "$DOWNLOAD_URL"
-          unzip -o artifact.zip -d python-app-artifact
+  #     - name: Download artifact (same as above)
+  #       env:
+  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: |
+  #         # This script is identical to the one in the Azure job
+  #         # In a real-world scenario, you might make this a reusable workflow
+  #         ARTIFACT_NAME=python-app-artifact
+  #         RUN_ID=${{ github.event.inputs.run_id }}
+  #         DOWNLOAD_URL=$(gh api repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts -q ".artifacts[] | select(.name==\"$ARTIFACT_NAME\") | .archive_download_url")
+  #         curl -L -H "Authorization: token $GH_TOKEN" -o artifact.zip "$DOWNLOAD_URL"
+  #         unzip -o artifact.zip -d python-app-artifact
       
-      # Placeholder for actual VM deployment steps
-      - name: Deploy to VM
+  #     # Placeholder for actual VM deployment steps
+  #     - name: Deploy to VM
+  #       run: |
+  #         echo "Deployment to VM would happen here."
+  #         echo "You would typically use SSH, SCP, or Ansible."
+  #         ls -la python-app-artifact
+
+    deploy-to-docker-python:
+       - name: Deploy to Docker VM
+         if: ${{ github.event.inputs.target == 'docker-vm' }}
         run: |
-          echo "Deployment to VM would happen here."
-          echo "You would typically use SSH, SCP, or Ansible."
-          ls -la python-app-artifact
+          echo "Deploying via Docker..."
+          ssh devuser@172.17.0.1 "docker pull ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }} \
+            && docker stop app || true \
+            && docker rm app || true \
+            && docker run -d --name app -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}"
+            
