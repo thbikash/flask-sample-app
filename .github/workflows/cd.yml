@@ -63,10 +63,29 @@ jobs:
           slot-name: 'production'
           package: './python-app-artifact'
 
-  # JOB 2: Deploy to a Docker
-  # deploy-to-docker-python:
-  #   # NEW: This job only runs if the target input is 'vm'
-  #   if: github.event.inputs.target == 'docker_python'
+  # # JOB 2: Deploy to a Docker
+  #     - name: Deploy-to-docker-python
+  #       if: github.event.inputs.target == 'docker_python'
+  #       run: |
+  #             echo "Deploying via Docker..."
+  #             ssh devuser@172.17.0.1 "docker pull ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }} \
+  #               && docker stop app || true \
+  #               && docker rm app || true \
+  #               && docker run -d --name app -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}"
+
+    # JOB 2: Deploy to a Docker
+  deploy-to-docker:  
+          if: github.event.inputs.target == 'docker_python'
+          runs-on: ubuntu-latest
+          steps:
+            - name: Docker Deployment
+              run: |
+                echo "Deploying via Docker..."
+                ssh devuser@172.17.0.1 "docker pull ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }} \
+                && docker stop app || true \
+                && docker rm app || true \
+                && docker run -d --name app -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}"
+
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Checkout repository
@@ -90,14 +109,3 @@ jobs:
   #         echo "Deployment to VM would happen here."
   #         echo "You would typically use SSH, SCP, or Ansible."
   #         ls -la python-app-artifact
-
-     deploy-to-docker-python:
-       - name: Deploy to Docker VM
-         if: ${{ github.event.inputs.target == 'docker_python' }}
-         run: |
-              echo "Deploying via Docker..."
-              ssh devuser@172.17.0.1 "docker pull ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }} \
-                && docker stop app || true \
-                && docker rm app || true \
-                && docker run -d --name app -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}"
-            
