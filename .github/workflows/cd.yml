@@ -76,17 +76,15 @@ jobs:
     # JOB 2: Deploy to a Docker
   deploy-to-docker:  
           if: github.event.inputs.target == 'docker_python'
-          runs-on: ubuntu-latest
+          runs-on: self-hosted
           steps:
             - name: Docker Deployment
               run: |
-                echo "Deploying via Docker..."
-                ssh-keyscan 172.17.0.1 >> ~/.ssh/known_hosts
-                ssh devuser@172.17.0.1 "docker pull ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }} \
-                && docker stop app || true \
-                && docker rm app || true \
-                && docker run -d --name app -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}"
-
+                echo "Deploying docker-image flask app on the locall hosted docker..."
+                docker pull ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}
+                docker stop app || true
+                docker rm app || true
+                docker run -d --name app -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}
   #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Checkout repository
