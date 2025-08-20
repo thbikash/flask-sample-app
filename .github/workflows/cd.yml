@@ -91,13 +91,13 @@ jobs:
   #         echo "You would typically use SSH, SCP, or Ansible."
   #         ls -la python-app-artifact
 
-    deploy-to-docker-python:
+     deploy-to-docker-python:
        - name: Deploy to Docker VM
-         if: ${{ github.event.inputs.target == 'docker-vm' }}
-        run: |
-          echo "Deploying via Docker..."
-          ssh devuser@172.17.0.1 "docker pull ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }} \
-            && docker stop app || true \
-            && docker rm app || true \
-            && docker run -d --name app -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}"
+         if: ${{ github.event.inputs.target == 'docker_python' }}
+         run: |
+              echo "Deploying via Docker..."
+              ssh devuser@172.17.0.1 "docker pull ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }} \
+                && docker stop app || true \
+                && docker rm app || true \
+                && docker run -d --name app -p 8081:8081 ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }}"
             
