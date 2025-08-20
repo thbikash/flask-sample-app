@@ -81,6 +81,7 @@ jobs:
             - name: Docker Deployment
               run: |
                 echo "Deploying via Docker..."
+                ssh-keyscan 172.17.0.1 >> ~/.ssh/known_hosts
                 ssh devuser@172.17.0.1 "docker pull ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.event.inputs.run_id }} \
                 && docker stop app || true \
                 && docker rm app || true \
