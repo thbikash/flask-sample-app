@@ -52,13 +52,6 @@ jobs:
           docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest .
           docker push $IMAGE_NAME:$VERSION
           docker push $IMAGE_NAME:latest
-    
-
-      # # (optional but handy) also push 'latest'
-      # - name: Tag & push :latest
-      #   run: |
-      #     docker tag ${{ secrets.DOCKER__USERNAME }}/flask-sample-app:${{ github.run_id }} ${{ secrets.DOCKER__USERNAME }}/flask-sample-app:latest
-      #     docker push ${{ secrets.DOCKER__USERNAME }}/flask-sample-app:latest
           
 
       # Save the tag so CD can read it as an artifact later
