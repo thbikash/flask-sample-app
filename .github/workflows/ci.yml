@@ -44,19 +44,29 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.run_id }} .
+      # - name: Build Docker image
+      #   run: |
+      #     docker build -t ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.run_id }} .
 
-      - name: Push Docker image
+      # - name: Push Docker image
+      #   run: |
+      #     docker push ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.run_id }}
+
+      - name: Build and push Docker image
         run: |
-          docker push ${{ secrets.DOCKER_USERNAME }}/flask-sample-app:${{ github.run_id }}
+          IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/flask-sample-app
+          VERSION=${{ github.run_id }}
+          docker build -t $IMAGE_NAME:$VERSION -t $IMAGE_NAME:latest .
+          docker push $IMAGE_NAME:$VERSION
+          docker push $IMAGE_NAME:latest
+    
 
       # (optional but handy) also push 'latest'
       - name: Tag & push :latest
         run: |
           docker tag ${{ secrets.DOCKER__USERNAME }}/flask-sample-app:${{ github.run_id }} ${{ secrets.DOCKER__USERNAME }}/flask-sample-app:latest
           docker push ${{ secrets.DOCKER__USERNAME }}/flask-sample-app:latest
+          
 
       # Save the tag so CD can read it as an artifact later
       - name: Save Docker metadata
