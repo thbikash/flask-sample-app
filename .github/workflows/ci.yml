@@ -28,7 +28,7 @@ jobs:
       - name: Package app
         run: |
           mkdir -p dist
-          rsync -av --progress . dist --exclude dist --exclude .git --exclude .github
+          rsync -av --progress . dist --exclude dist --exclude .git --exclude .github --exclude Dockerfile
 
 
       - name: Upload artifact
