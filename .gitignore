@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+env/
+antenv/
+
+# SQLite database (optional)
+*.db
+
+# VS Code settings (optional)
+.vscode/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+#Secrets and Variables
+.env
+
+#Docker Related
+.dockerignore
+Dockerfile
